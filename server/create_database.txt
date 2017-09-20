@@ -35,4 +35,4 @@ CREATE TABLE users (
      password_salt VARCHAR(255),
      PRIMARY KEY (id));
 
-GRANT ALL PRIVILEGES ON cluewords.* To 'cluewords'@'localhost' IDENTIFIED BY 'cluewords';
+GRANT ALL PRIVILEGES ON cluewords.* To 'cluewords'@'%' IDENTIFIED BY 'cluewords';
