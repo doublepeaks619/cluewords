@@ -1,0 +1,172 @@
+<html>
+<title>cluewords</title>
+<head>
+<style>
+    .redteam {
+        color: #ff471a;
+        float: left;
+        width: 50%;
+    }
+    .blueteam {
+        color: #5A6DE7;
+        float:left;
+        width: 50%;
+    }
+    #action {
+        width: 50%;
+        float: left;
+    }
+    input {
+        width: 100%;
+    }
+    button {
+        width: 100%;
+    }
+    ul {
+        list-style-type: none;
+    }
+</style>
+</head>
+
+<body>
+    <a href='login'>login</a>
+    <ul id="words"></ul>
+    <div id="bluecount" class="blueteam"></div>
+    <div id="redcount" class="redteam"></div>
+    <div id="role1" class="blueteam"></div>
+    <div id="role3" class="redteam"></div>
+    <div id="role2" class="blueteam"></div>
+    <div id="role4" class="redteam"></div>
+    <div id="action"></div>
+    <div><input type="text" id="clue" value="Your clue word here..."></input></div>
+    <div><input type="text" id="clueNumber" value="Your clue number here..."></input></div>
+    <div><button id="clueSubmit" onclick="submitClue()">Submit clue</button></div>
+    <div><button id="endTurn" onclick="endTurn()">End turn</button></div>
+
+    <script type="text/javascript" src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.4.5/socket.io.min.js"></script>
+    <script type="text/javascript" src="js/codenames_utils.js"></script>
+
+    <script type="text/javascript">
+        var socket = null;
+        var gamestate = null;
+        var current_player_id = null;
+        var current_game_id = null;
+
+        function connectToGame() {
+            if (gamestate != null) {
+                socket.emit('leave_game', {player_id: current_player_id, game_id: parseInt(gamestate.game_id)});
+            }
+            var player_id = '{{ current_user.name }}';
+            var game_id = getUrlParameter('game_id');
+            current_player_id = player_id;
+            current_game_id = game_id;
+            gamestate = null;
+            socket.emit('join_game', {player_id: current_player_id, game_id: parseInt(current_game_id)});
+        }
+
+        function endGame() {
+            requestData = {player_id: current_player_id};
+
+            $.delete("/game/" + current_game_id, requestData, function(data) {});
+        }
+
+        function submitClue() {
+            var clue = document.getElementById("clue").value;
+            var clueNumber = document.getElementById("clueNumber").value;
+
+            if (gamestate.expected_player != current_player_id){
+                return
+            }
+
+            requestData = {player_id: current_player_id, clue_word: clue, clue_number: clueNumber}
+            $.post( "/game/" + current_game_id + '/clue', requestData, function(data) {});
+        }
+
+        function endTurn() {
+            if (gamestate.expected_player != current_player_id){
+                return
+            }
+
+            requestData = {player_id: current_player_id, guess_word: null};
+            $.post( "/game/" + current_game_id + '/guess', requestData, function(data) {});
+        }
+
+        function submitGuess(word) {
+            if (gamestate.expected_player != current_player_id){
+                return
+            }
+
+            requestData = {player_id: current_player_id, guess_word: word};
+            $.post( "/game/" + current_game_id + '/guess', requestData, function(data) {});
+        }
+
+        $(document).ready(function() {
+            var url = "http://" + document.domain + ":" + location.port;
+            socket = io.connect(url);
+            document.getElementById("clueSubmit").style.display = 'none';
+            document.getElementById("endTurn").style.display = 'none';
+            connectToGame()
+            socket.on('gamestate', function(msg) {
+                if (gamestate == null || gamestate.game_id == msg.game_id){
+                    gamestate = msg;
+                    document.getElementById("clue").value = gamestate.clue;
+                    document.getElementById("clueNumber").value = gamestate.clue_number;
+                    clueDisplay = 'none';
+                    etDisplay = 'none';
+                    if (gamestate.ended == 1){
+                        $('#action').html('The game has finished');
+                    }
+                    else {
+                        if (gamestate.expected_player == gamestate.guessers[0] || gamestate.expected_player == gamestate.guessers[1]){
+                            action = 'guess';
+                            if (gamestate.expected_player == current_player_id && gamestate.guess_remaining <= gamestate.clue_number){
+                                etDisplay = 'block';
+                            }
+                        }
+                        else {
+                            action = 'give a clue';
+                            if (gamestate.expected_player == current_player_id){
+                                clueDisplay = 'block';
+                            }
+                        }
+
+                        document.getElementById("clueSubmit").style.display = clueDisplay;
+                        document.getElementById("endTurn").style.display = etDisplay;
+                        $('#action').html(gamestate.expected_player + ' is next to ' + action);
+                    }
+
+                    $('#bluecount').html(gamestate.remaining_blue);
+                    $('#redcount').html(gamestate.remaining_red);
+
+                    $('#role1').html(gamestate.cluers[0] + ' is the blue team clue giver');
+                    $('#role2').html(gamestate.guessers[0] + ' is the blue team guesser');
+                    $('#role3').html(gamestate.cluers[1] + ' is the red team clue giver');
+                    $('#role4').html(gamestate.guessers[1] + ' is the red team guesser');
+
+                    content = '';
+                    $.each(gamestate.board, function(index, value) {
+                        var bgColour = '#ffffff';
+                        var textColour = '#000000';
+                        if (current_player_id == gamestate.cluers[0] || current_player_id == gamestate.cluers[1]){
+                            if (value.actual == 0) { bgColour = '#5A6DE7'; }
+                            else if (value.actual == 1) { bgColour = '#ff471a'; }
+                            else if (value.actual == 2) { bgColour = '#d1e0e0'; }
+                            else { bgColour = '#645B58'; }
+                        }
+                        if (value.guess != 2) {
+                            if (value.actual == 0) { bgColour = '#5A6DE7'; textColour = '#5A6DE7'; }
+                            else if (value.actual == 1) { bgColour = '#ff471a'; textColour = '#ff471a'; }
+                            else if (value.actual == 2) { bgColour = '#d1e0e0'; textColour = '#d1e0e0'; }
+                            else { bgColour = '#645B58'; textColour = '#645B58'; }
+                        }
+                        content += '<li id="' + value.word + '" onclick="submitGuess(this.id)" style="background-color:' + bgColour + ';color:' + textColour + ';" class="' + value.guess + '">' + value.word + '</li>'
+                    });
+                    $('#words').html(content);
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

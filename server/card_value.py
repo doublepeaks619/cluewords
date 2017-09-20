@@ -1,0 +1,4 @@
+BLUE = 0
+RED = 1
+NONE = 2
+ASSASSIN = 3

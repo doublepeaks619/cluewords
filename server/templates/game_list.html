@@ -1,0 +1,68 @@
+<html>
+<title>cluewords</title>
+<head>
+<style>
+    input {
+        width: 100%;
+    }
+    button {
+        width: 100%;
+    }
+    ul {
+        list-style-type: none;
+    }
+</style>
+</head>
+
+<body>
+    <a href='login'>login</a>
+    <div>Select a game to play it:</div>
+    <ul id="games"></ul>
+
+    <div>Or create a new one here:</div>
+    <div><input type="text" id="player1a" placeholder="Blue team clue giver"></div>
+    <div><input type="text" id="player1b" placeholder="Blue team guesser"></div>
+    <div><input type="text" id="player2a" placeholder="Red team clue giver"></div>
+    <div><input type="text" id="player2b" placeholder="Red team guesser"></div>
+    <div><input type="text" id="gameName" placeholder="Name for your game"></div>
+    <div id="createdGameId"></div>
+    <div><button onclick="createGame()">Create a game</button></div>
+
+    <script type="text/javascript" src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.4.5/socket.io.min.js"></script>
+    <script type="text/javascript" src="js/codenames_utils.js"></script>
+
+    <script type="text/javascript">
+        $(document).ready(function() {
+            refreshGameList();
+        });
+
+        function refreshGameList() {
+            $.get( "/player/{{ current_user.name }}/games", function(data) {
+                content = '';
+                $.each(data, function(index, value) {
+                    content += '<li id="' + value.id + '" onclick="connectToGame(this.id)">' + value.name + '</li>'
+                });
+                $('#games').html(content);
+            });
+        }
+
+        function connectToGame(game_id) {
+            $(location).attr('href','/game_board.html?game_id=' + game_id);
+        }
+
+        function createGame() {
+            var gameName = document.getElementById("gameName").value;
+            var player1a = document.getElementById("player1a").value;
+            var player1b = document.getElementById("player1b").value;
+            var player2a = document.getElementById("player2a").value;
+            var player2b = document.getElementById("player2b").value;
+            requestData = {game_name: gameName, player1a: player1a, player1b: player1b, player2a: player2a, player2b: player2b}
+            $.post( "/game", requestData, function(data) {
+                refreshGameList();
+            });
+        }
+    </script>
+</body>
+
+</html>

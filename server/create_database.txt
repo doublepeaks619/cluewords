@@ -1,0 +1,38 @@
+CREATE DATABASE cluewords;
+
+USE cluewords;
+
+CREATE TABLE turns (
+     id MEDIUMINT NOT NULL AUTO_INCREMENT,
+     game_id MEDIUMINT,
+     current_player VARCHAR(255),
+     current_team INT,
+     next_player VARCHAR(255),
+     next_team INT,
+     guess VARCHAR(32),
+     guess_remaining INT,
+     clue VARCHAR(32),
+     clue_number INT,
+     board VARCHAR(2048),
+     PRIMARY KEY (id),
+     INDEX game_id_idx (game_id));
+
+CREATE TABLE games (
+     id MEDIUMINT NOT NULL AUTO_INCREMENT,
+     name VARCHAR(255),
+     player1a VARCHAR(255),
+     player1b VARCHAR(255),
+     player2a VARCHAR(255),
+     player2b VARCHAR(255),
+     current_player VARCHAR(255),
+     board VARCHAR(2048),
+     ended BOOLEAN,
+     PRIMARY KEY (id));
+
+CREATE TABLE users (
+     id VARCHAR(255),
+     password_hash VARCHAR(255),
+     password_salt VARCHAR(255),
+     PRIMARY KEY (id));
+
+GRANT ALL PRIVILEGES ON cluewords.* To 'cluewords'@'localhost' IDENTIFIED BY 'cluewords';

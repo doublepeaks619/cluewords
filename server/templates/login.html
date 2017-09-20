@@ -1,0 +1,39 @@
+<html>
+<title>cluewords</title>
+<head>
+<style>
+    input {
+        width: 100%;
+    }
+    button {
+        width: 100%;
+    }
+    ul {
+        list-style-type: none;
+    }
+</style>
+</head>
+
+<body>
+    <div><input type="text" name="username" id="username" placeholder="your name"></div>
+    <div><input type="password" name="password" id="password" placeholder="your password"></div>
+    <div><button onclick="login()">Sign up / Log in</button></div>
+
+    <script type="text/javascript" src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.4.5/socket.io.min.js"></script>
+    <script type="text/javascript" src="js/codenames_utils.js"></script>
+
+    <script type="text/javascript">
+        function login() {
+            var player_id = document.getElementById("username").value;
+            var password = document.getElementById("password").value;
+            requestData = {player_id: player_id, password: password};
+
+            $.post("/login", requestData, function(data) {
+                window.location = data;
+            });
+        }
+    </script>
+</body>
+
+</html>
