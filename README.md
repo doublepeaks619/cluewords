@@ -2,7 +2,7 @@
 Game server for cluewords.
 
 * [Install Guide](#install-guide)
-  * [Ubuntu 16.04](#ubuntu-16.04)
+  * [Ubuntu 16.04](#ubuntu-1604)
 * [API Documentation](#api-documentation)
   * [REST API](#rest-api)
   * [Websockets API](#websockets-api)
