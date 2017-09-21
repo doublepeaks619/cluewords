@@ -167,7 +167,7 @@ Event name: leave_game
 ````
 Sender: server
 Event name: gamestate
-["gamestate", {
+{
 	"expected_team": 1,
 	"guess": "WORD",
 	"guess_remaining": 1,
@@ -186,5 +186,5 @@ Event name: gamestate
 	"guessers": ["blue team guesser", "red team guesser"],
 	"remaining_blue": 9,
 	"remaining_red": 8
-}]
+}
 ````
