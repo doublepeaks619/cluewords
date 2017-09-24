@@ -1,19 +1,7 @@
 import json
 import mysql.connector
 import hashlib, uuid
-
-class User(object):
-
-    def __init__(self, username, authenticated):
-        self._username = username
-        self.is_authenticated = False
-        self.is_active = True
-        self.is_anonymous = False
-        self.is_authenticated = authenticated
-        self.name = username
-
-    def get_id(self):
-        return self._username
+from exceptiondef import AuthException
 
 class UserStore(object):
 
@@ -35,7 +23,14 @@ class UserStore(object):
 
     def validate(self, player_id, supplied_password):
         result, psalt, phash = self._load(player_id)
+        if result is None:
+            raise AuthException('login failure: username or password incorrect')
+        if not UserStore._check_password(supplied_password, psalt, phash):
+            raise AuthException('login failure: username or password incorrect')
+        return result
 
+    def create(self, player_id, supplied_password):
+        result, psalt, phash = self._load(player_id)
         if result is None:
             cnxn = mysql.connector.connect(**self._db_config)
             cursor = cnxn.cursor()
@@ -45,12 +40,8 @@ class UserStore(object):
             cnxn.commit()
             cursor.close()
             cnxn.close()
-            result, psalt, phash = self._load(player_id)
-
-        if not UserStore._check_password(supplied_password, psalt, phash):
-            result = None
-
-        return result
+        else:
+             raise AuthException('login failure: username taken')
 
     def _load(self, player_id):
         cnxn = mysql.connector.connect(**self._db_config)
@@ -62,12 +53,9 @@ class UserStore(object):
         psalt = None
         phash = None
         for (username, password_salt, password_hash) in cursor:
-            result = User(username, True)
+            result = username
             psalt = password_salt
             phash = password_hash
 
         cnxn.close()
         return result, psalt, phash
-
-    def get(self, player_id):
-        return User(player_id, True)

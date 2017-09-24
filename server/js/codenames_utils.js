@@ -1,21 +1,50 @@
-jQuery.each( [ "put", "delete", "post", "get" ], function( i, method ) {
-    jQuery[ method ] = function( url, data, callback, type ) {
-        if ( jQuery.isFunction( data ) ) {
-        type = type || callback;
-        callback = data;
-        data = undefined;
-        }
-
-        return jQuery.ajax({
+var httpGet = function(url, username, password, callback) {
+    return jQuery.ajax({
         url: url,
-        type: method,
+        type: 'get',
+        beforeSend: function ajaxBeforeSend(jqXHR) {
+            jqXHR.withCredentials = true;
+            jqXHR.setRequestHeader("Authorization", "Basic " + btoa(encodeURIComponent(escape(username)) + ":" + encodeURIComponent(escape(password))));
+        },
+        success: callback,
+        error: function(jqXHR, textStatus, errorThrown) {
+            alert(jqXHR.status + '\n' + textStatus + '\n' + errorThrown);
+        }
+    });
+};
+
+var httpDelete = function(url, username, password, callback) {
+    return jQuery.ajax({
+        url: url,
+        type: 'delete',
+        beforeSend: function ajaxBeforeSend(jqXHR) {
+            jqXHR.withCredentials = true;
+            jqXHR.setRequestHeader("Authorization", "Basic " + btoa(encodeURIComponent(escape(username)) + ":" + encodeURIComponent(escape(password))));
+        },
+        success: callback,
+        error: function(jqXHR, textStatus, errorThrown) {
+            alert(jqXHR.status + '\n' + textStatus + '\n' + errorThrown);            
+        }
+    });
+};
+
+var httpPost = function(url, data, username, password, callback) {
+    return jQuery.ajax({
+        url: url,
+        type: 'post',
         processData: false,
+        beforeSend: function ajaxBeforeSend(jqXHR) {
+            jqXHR.withCredentials = true;
+            jqXHR.setRequestHeader("Authorization", "Basic " + btoa(encodeURIComponent(escape(username)) + ":" + encodeURIComponent(escape(password))));
+        },
         data: JSON.stringify(data),
         contentType: "application/json; charset=utf-8",
-        success: callback
-        });
-    };
-});
+        success: callback,
+        error: function(jqXHR, textStatus, errorThrown) {
+            alert(jqXHR.status + '\n' + textStatus + '\n' + errorThrown);            
+        }
+    });
+};
 
 var getUrlParameter = function getUrlParameter(sParam) {
     var sPageURL = decodeURIComponent(window.location.search.substring(1)),

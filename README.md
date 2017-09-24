@@ -59,19 +59,15 @@ python app.py
 ### REST API
 See [example game client pages](templates/) for use of REST API.
 
-#### Log in a user to access the restricted APIs
+#### Create a new user login
 ````    
-POST /login
-{player_id: "aplayerid", password: "pwrd"}
+POST /signup
+{"username": "aplayerid", "password": "pwrd"}
 
 Response Codes:
 200 - OK
-401 - Not authorised: username/password incorrect
+400 - Client error: bad supplied data
 500 - Server Error
-
-Notes:
-If the player_id is not found, a new login is created for this player with the given password.
-If the player_id is already known the password is verified against the held details.
 ````
 
 #### Create a new game
@@ -85,9 +81,12 @@ POST /game
     player2b: "red team guesser ID"
 }
 
+Must include basic authorization headers with valid username and password
+
 Response Codes:
 200 - OK
 400 - Client error: bad supplied data
+401 - Not authorised: username/password incorrect
 500 - Server Error
 
 Response body:
@@ -96,23 +95,30 @@ Response body:
 
 #### End a game
 ````    
-DELETE /game
-{player_id: "player id"}
+DELETE /game/<game_id>
+
+Must include basic authorization headers with valid username and password
 
 Response Codes:
 200 - OK
 400 - Client error: bad supplied data
+401 - Not authorised: username/password incorrect
 500 - Server Error
 ````
 
 #### Supply a guess
 ````    
 POST /game/<game_id>/guess
-{player_id: "playerid", guess_word: "WORD"}
+{
+    "guess_word": "WORD"
+}
+
+Must include basic authorization headers with valid username and password
 
 Response Codes:
 200 - OK
 400 - Client error: bad supplied data
+401 - Not authorised: username/password incorrect
 500 - Server Error
 
 Response body:
@@ -122,11 +128,17 @@ Response body:
 #### Supply a clue
 ````    
 POST /game/<game_id>/clue
-{player_id: "playerid", clue_word: "word", clue_number: "1"}
+{
+    "clue_word": "word",
+    "clue_number": "1"
+}
+
+Must include basic authorization headers with valid username and password
 
 Response Codes:
 200 - OK
 400 - Client error: bad supplied data
+401 - Not authorised: username/password incorrect
 500 - Server Error
 
 Response body:
@@ -137,9 +149,12 @@ Response body:
 ````    
 GET /player/<player_id>/games
 
+Must include basic authorization headers with valid username and password
+
 Response Codes:
 200 - OK
 400 - Client error: bad supplied data
+401 - Not authorised: username/password incorrect
 500 - Server Error
 
 Response body:
@@ -153,14 +168,22 @@ See [example game client](templates/game_board.html) for use of websockets.
 ````
 Sender: client
 Event name: join_game
-{"player_id":"playerid","game_id":2}
+{
+    "username": "aplayerid", 
+    "password": "pwrd",
+    "game_id":2
+}
 ````
 
 #### Stop receiving notifications for a game
 ````
 Sender: client
 Event name: leave_game
-{"player_id":"playerid","game_id":2}
+{
+    "username": "aplayerid", 
+    "password": "pwrd",
+    "game_id":2
+}
 ````
 
 #### The current state of the game
@@ -168,23 +191,23 @@ Event name: leave_game
 Sender: server
 Event name: gamestate
 {
-	"expected_team": 1,
-	"guess": "WORD",
-	"guess_remaining": 1,
-	"expected_player": "playerid",
-	"cluers": ["blue team clue give", "red team clue giver"],
-	"clue": "word",
-	"ended": 1,
-	"board": [{
-		"actual": card_value,
-		"guess": card_value,
-		"word": "WORD"
-	  }, ...
+    "expected_team": 1,
+    "guess": "WORD",
+    "guess_remaining": 1,
+    "expected_player": "playerid",
+    "cluers": ["blue team clue give", "red team clue giver"],
+    "clue": "word",
+    "ended": 1,
+    "board": [{
+        "actual": card_value,
+        "guess": card_value,
+        "word": "WORD"
+      }, ...
     ],
-	"clue_number": 1,
-	"game_id": 2,
-	"guessers": ["blue team guesser", "red team guesser"],
-	"remaining_blue": 9,
-	"remaining_red": 8
+    "clue_number": 1,
+    "game_id": 2,
+    "guessers": ["blue team guesser", "red team guesser"],
+    "remaining_blue": 9,
+    "remaining_red": 8
 }
 ````
